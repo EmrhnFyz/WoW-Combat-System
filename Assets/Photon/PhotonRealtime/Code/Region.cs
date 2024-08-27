@@ -15,8 +15,12 @@
 
 namespace Photon.Realtime
 {
-#if SUPPORTED_UNITY || NETFX_CORE
-#endif
+    using ExitGames.Client.Photon;
+
+    #if SUPPORTED_UNITY || NETFX_CORE
+    using Hashtable = ExitGames.Client.Photon.Hashtable;
+    using SupportClass = ExitGames.Client.Photon.SupportClass;
+    #endif
 
 
     public class Region
@@ -60,9 +64,9 @@ namespace Photon.Realtime
             }
 
             codeAsString = codeAsString.ToLower();
-            var slash = codeAsString.IndexOf('/');
-            this.Code = slash <= 0 ? codeAsString : codeAsString[..slash];
-            this.Cluster = slash <= 0 ? "" : codeAsString.Substring(slash + 1, codeAsString.Length - slash - 1);
+            int slash = codeAsString.IndexOf('/');
+            this.Code = slash <= 0 ? codeAsString : codeAsString.Substring(0, slash);
+            this.Cluster = slash <= 0 ? "" : codeAsString.Substring(slash+1, codeAsString.Length-slash-1);
         }
 
         public override string ToString()
@@ -72,7 +76,7 @@ namespace Photon.Realtime
 
         public string ToString(bool compact = false)
         {
-            var regionCluster = this.Code;
+            string regionCluster = this.Code;
             if (!string.IsNullOrEmpty(this.Cluster))
             {
                 regionCluster += "/" + this.Cluster;

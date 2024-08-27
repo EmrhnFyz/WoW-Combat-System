@@ -16,12 +16,15 @@
 
 namespace Photon.Realtime
 {
+    using System;
+    using System.Collections;
     using System.Collections.Generic;
     using ExitGames.Client.Photon;
 
-#if SUPPORTED_UNITY || NETFX_CORE
+    #if SUPPORTED_UNITY || NETFX_CORE
     using Hashtable = ExitGames.Client.Photon.Hashtable;
-#endif
+    using SupportClass = ExitGames.Client.Photon.SupportClass;
+    #endif
 
 
     /// <summary>
@@ -155,7 +158,7 @@ namespace Photon.Realtime
             {
                 if (value != this.maxPlayers)
                 {
-                    var maxPlayersPropValue = (byte)value;     // TODO: when the server accepts int typed MaxPlayers, remove this
+                    byte maxPlayersPropValue = (byte)value;     // TODO: when the server accepts int typed MaxPlayers, remove this
                     if (!this.isOffline)
                     {
                         this.LoadBalancingClient.OpSetPropertiesOfRoom(new Hashtable() { { GamePropertyKey.MaxPlayers, maxPlayersPropValue } });
@@ -181,7 +184,7 @@ namespace Photon.Realtime
         }
 
         /// <summary>While inside a Room, this is the list of players who are also in that room.</summary>
-        private Dictionary<int, Player> players = new();
+        private Dictionary<int, Player> players = new Dictionary<int, Player>();
 
         /// <summary>While inside a Room, this is the list of players who are also in that room.</summary>
         public Dictionary<int, Player> Players
@@ -300,10 +303,10 @@ namespace Photon.Realtime
         /// <summary>Define if actor or room properties with null values are removed on the server or kept.</summary>
         public bool DeleteNullProperties { get; private set; }
 
-#if SERVERSDK
+        #if SERVERSDK
         /// <summary>Define if rooms should have unique UserId per actor and that UserIds are used instead of actor number in rejoin.</summary>
         public bool CheckUserOnJoin { get; private set; }
-#endif
+        #endif
 
 
         /// <summary>Creates a Room (representation) with given name and properties and the "listing options" as provided by parameters.</summary>
@@ -336,15 +339,15 @@ namespace Photon.Realtime
             this.SuppressPlayerInfo = (roomFlags & (int)RoomOptionBit.SuppressPlayerInfo) != 0;
             this.PublishUserId = (roomFlags & (int)RoomOptionBit.PublishUserId) != 0;
             this.DeleteNullProperties = (roomFlags & (int)RoomOptionBit.DeleteNullProps) != 0;
-#if SERVERSDK
+            #if SERVERSDK
             this.CheckUserOnJoin = (roomFlags & (int)RoomOptionBit.CheckUserOnJoin) != 0;
-#endif
+            #endif
             this.autoCleanUp = (roomFlags & (int)RoomOptionBit.DeleteCacheOnLeave) != 0;
         }
 
         protected internal override void InternalCacheProperties(Hashtable propertiesToCache)
         {
-            var oldMasterId = this.masterClientId;
+            int oldMasterId = this.masterClientId;
 
             base.InternalCacheProperties(propertiesToCache);    // important: updating the properties fields has no way to do callbacks on change
 
@@ -406,7 +409,7 @@ namespace Photon.Realtime
             {
                 return false;
             }
-            Hashtable customProps = propertiesToSet.StripToStringKeys();
+            Hashtable customProps = propertiesToSet.StripToStringKeys() as Hashtable;
 
             if (this.isOffline)
             {
@@ -445,7 +448,7 @@ namespace Photon.Realtime
             {
                 return false;
             }
-            var customProps = new Hashtable();
+            Hashtable customProps = new Hashtable();
             customProps[GamePropertyKey.PropsListedInLobby] = lobbyProps;
             return this.LoadBalancingClient.OpSetPropertiesOfRoom(customProps);
         }
@@ -494,8 +497,8 @@ namespace Photon.Realtime
             {
                 return false;
             }
-            var newProps = new Hashtable() { { GamePropertyKey.MasterClientId, masterClientPlayer.ActorNumber } };
-            var prevProps = new Hashtable() { { GamePropertyKey.MasterClientId, this.MasterClientId } };
+            Hashtable newProps = new Hashtable() { { GamePropertyKey.MasterClientId, masterClientPlayer.ActorNumber } };
+            Hashtable prevProps = new Hashtable() { { GamePropertyKey.MasterClientId, this.MasterClientId } };
             return this.LoadBalancingClient.OpSetPropertiesOfRoom(newProps, prevProps);
         }
 
@@ -542,7 +545,7 @@ namespace Photon.Realtime
         /// <returns>The player with the ID or null.</returns>
         public virtual Player GetPlayer(int id, bool findMaster = false)
         {
-            var idToFind = (findMaster && id == 0) ? this.MasterClientId : id;
+            int idToFind = (findMaster && id == 0) ? this.MasterClientId : id;
 
             Player result = null;
             this.Players.TryGetValue(idToFind, out result);
@@ -600,7 +603,7 @@ namespace Photon.Realtime
             {
                 return false;
             }
-            var gameProperties = new Hashtable(1);
+            Hashtable gameProperties = new Hashtable(1);
             gameProperties.Add(GamePropertyKey.ExpectedUsers, newExpectedUsers);
             Hashtable expectedProperties = null;
             if (oldExpectedUsers != null)

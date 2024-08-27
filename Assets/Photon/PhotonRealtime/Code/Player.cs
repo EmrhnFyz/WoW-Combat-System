@@ -17,13 +17,18 @@
 
 namespace Photon.Realtime
 {
+    using System;
+    using System.Collections;
     using System.Collections.Generic;
+    using ExitGames.Client.Photon;
 
-#if SUPPORTED_UNITY
-#endif
-#if SUPPORTED_UNITY || NETFX_CORE
+    #if SUPPORTED_UNITY
+    using UnityEngine;
+    #endif
+    #if SUPPORTED_UNITY || NETFX_CORE
     using Hashtable = ExitGames.Client.Photon.Hashtable;
-#endif
+    using SupportClass = ExitGames.Client.Photon.SupportClass;
+    #endif
 
 
     /// <summary>
@@ -211,10 +216,10 @@ namespace Photon.Realtime
             }
 
             Dictionary<int, Player> players = this.RoomReference.Players;
-            var nextHigherId = int.MaxValue;    // we look for the next higher ID
-            var lowestId = currentPlayerId;     // if we are the player with the highest ID, there is no higher and we return to the lowest player's id
+            int nextHigherId = int.MaxValue;    // we look for the next higher ID
+            int lowestId = currentPlayerId;     // if we are the player with the highest ID, there is no higher and we return to the lowest player's id
 
-            foreach (var playerid in players.Keys)
+            foreach (int playerid in players.Keys)
             {
                 if (playerid < lowestId)
                 {
@@ -248,7 +253,7 @@ namespace Photon.Realtime
 
             if (properties.ContainsKey(ActorProperties.PlayerName))
             {
-                var nameInServersProperties = (string)properties[ActorProperties.PlayerName];
+                string nameInServersProperties = (string)properties[ActorProperties.PlayerName];
                 if (nameInServersProperties != null)
                 {
                     if (this.IsLocal)
@@ -286,7 +291,7 @@ namespace Photon.Realtime
         /// </summary>
         public override string ToString()
         {
-            return string.Format("#{0:00} '{1}'", this.ActorNumber, this.NickName);
+            return string.Format("#{0:00} '{1}'",this.ActorNumber, this.NickName);
         }
 
         /// <summary>
@@ -306,7 +311,8 @@ namespace Photon.Realtime
         /// </summary>
         public override bool Equals(object p)
         {
-            return p is Player pp && this.GetHashCode() == pp.GetHashCode();
+            Player pp = p as Player;
+            return (pp != null && this.GetHashCode() == pp.GetHashCode());
         }
 
         /// <summary>
@@ -388,7 +394,7 @@ namespace Photon.Realtime
                 return false;
             }
 
-            Hashtable customProps = propertiesToSet.StripToStringKeys();
+            Hashtable customProps = propertiesToSet.StripToStringKeys() as Hashtable;
 
             if (this.RoomReference != null)
             {
@@ -406,7 +412,7 @@ namespace Photon.Realtime
                 }
                 else
                 {
-                    Hashtable customPropsToCheck = expectedValues.StripToStringKeys();
+                    Hashtable customPropsToCheck = expectedValues.StripToStringKeys() as Hashtable;
 
                     // send (sync) these new values if in online room
                     return this.RoomReference.LoadBalancingClient.OpSetPropertiesOfActor(this.actorNumber, customProps, customPropsToCheck, webFlags);
@@ -435,7 +441,7 @@ namespace Photon.Realtime
         {
             if (this.RoomReference != null && !this.RoomReference.IsOffline)
             {
-                var properties = new Hashtable();
+                Hashtable properties = new Hashtable();
                 properties[ActorProperties.PlayerName] = this.nickName;
                 return this.RoomReference.LoadBalancingClient.OpSetPropertiesOfActor(this.ActorNumber, properties);
             }

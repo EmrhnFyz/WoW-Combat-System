@@ -15,7 +15,7 @@ namespace Bolt.Utils
     {
         private const string ServiceUrl = "https://partner.photonengine.com/api/Unity/User/RegisterEx";
 
-        private readonly Dictionary<string, string> requestHeaders = new()
+        private readonly Dictionary<string, string> requestHeaders = new Dictionary<string, string>
         {
             {"Content-Type", "application/json"},
             {"x-functions-key", "VQ920wVUieLHT9c3v1ZCbytaLXpXbktUztKb3iYLCdiRKjUagcl6eg=="}
@@ -43,7 +43,7 @@ namespace Bolt.Utils
                 return false;
             }
 
-            var req = new AccountServiceRequest();
+            AccountServiceRequest req = new AccountServiceRequest();
             req.Email = email;
             req.ServiceTypes = serviceTypes;
             return this.RegisterByEmail(req, callback, errorCallback);
@@ -114,8 +114,8 @@ namespace Bolt.Utils
 
         private static string GetUrlWithQueryStringEscaped(AccountServiceRequest request)
         {
-            var email = UnityEngine.Networking.UnityWebRequest.EscapeURL(request.Email);
-            var st = UnityEngine.Networking.UnityWebRequest.EscapeURL(request.ServiceTypes);
+            string email = UnityEngine.Networking.UnityWebRequest.EscapeURL(request.Email);
+            string st = UnityEngine.Networking.UnityWebRequest.EscapeURL(request.ServiceTypes);
             return string.Format("{0}?email={1}&st={2}", ServiceUrl, email, st);
         }
 
@@ -131,15 +131,15 @@ namespace Bolt.Utils
                 // Unity's JsonUtility does not support deserializing Dictionary, we manually parse it, dirty & ugly af, better then using a 3rd party lib
                 if (res.ReturnCode == AccountServiceReturnCodes.Success)
                 {
-                    var parts = result.Split(new[] { "\"ApplicationIds\":{" },
+                    string[] parts = result.Split(new[] {"\"ApplicationIds\":{"},
                         StringSplitOptions.RemoveEmptyEntries);
                     parts = parts[1].Split('}');
-                    var applicationIds = parts[0];
+                    string applicationIds = parts[0];
                     if (!string.IsNullOrEmpty(applicationIds))
                     {
-                        parts = applicationIds.Split(new[] { ',', '"', ':' }, StringSplitOptions.RemoveEmptyEntries);
+                        parts = applicationIds.Split(new[] {',', '"', ':'}, StringSplitOptions.RemoveEmptyEntries);
                         res.ApplicationIds = new Dictionary<string, string>(parts.Length / 2);
-                        for (var i = 0; i < parts.Length; i = i + 2)
+                        for (int i = 0; i < parts.Length; i = i + 2)
                         {
                             res.ApplicationIds.Add(parts[i], parts[i + 1]);
                         }
@@ -165,13 +165,13 @@ namespace Bolt.Utils
         {
             if (appTypes != null)
             {
-                var serviceTypes = string.Empty;
+                string serviceTypes = string.Empty;
                 if (appTypes.Count > 0)
                 {
-                    serviceTypes = ((int)appTypes[0]).ToString();
-                    for (var i = 1; i < appTypes.Count; i++)
+                    serviceTypes = ((int) appTypes[0]).ToString();
+                    for (int i = 1; i < appTypes.Count; i++)
                     {
-                        var appType = (int)appTypes[i];
+                        int appType = (int) appTypes[i];
                         serviceTypes = string.Format("{0},{1}", serviceTypes, appType);
                     }
                 }
@@ -184,7 +184,7 @@ namespace Bolt.Utils
 
         // RFC2822 compliant matching 99.9% of all email addresses in actual use today
         // according to http://www.regular-expressions.info/email.html [22.02.2012]
-        private static Regex reg = new(
+        private static Regex reg = new Regex(
             "^((?>[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+\\x20*|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\"\\x20*)*(?<angle><))?((?!\\.)(?>\\.?[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+)+|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\")@(((?!-)[a-zA-Z\\d\\-]+(?<!-)\\.)+[a-zA-Z]{2,}|\\[(((?(?<!\\[)\\.)(25[0-5]|2[0-4]\\d|[01]?\\d?\\d)){4}|[a-zA-Z\\d\\-]*[a-zA-Z\\d]:((?=[\\x01-\\x7f])[^\\\\[\\]]|\\[\\x01-\\x7f])+)\\])(?(angle)>)$",
             RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
@@ -195,7 +195,7 @@ namespace Bolt.Utils
                 return false;
             }
 
-            Match result = reg.Match(mailAddress);
+            var result = reg.Match(mailAddress);
             return result.Success;
         }
 
@@ -226,48 +226,48 @@ namespace Bolt.Utils
         private static System.Collections.IEnumerator HttpPost(string url, Dictionary<string, string> headers,
             byte[] payload, Action<string> successCallback, Action<string> errorCallback)
         {
-            using var w = new UnityWebRequest(url, "POST");
-            if (payload != null)
+            using (UnityWebRequest w = new UnityWebRequest(url, "POST"))
             {
-                w.uploadHandler = new UploadHandlerRaw(payload);
-            }
-
-            w.downloadHandler = new DownloadHandlerBuffer();
-            if (headers != null)
-            {
-                foreach (KeyValuePair<string, string> header in headers)
+                if (payload != null)
                 {
-                    w.SetRequestHeader(header.Key, header.Value);
+                    w.uploadHandler = new UploadHandlerRaw(payload);
                 }
-            }
+
+                w.downloadHandler = new DownloadHandlerBuffer();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        w.SetRequestHeader(header.Key, header.Value);
+                    }
+                }
 
 #if UNITY_2017_2_OR_NEWER
-            yield return w.SendWebRequest();
+                yield return w.SendWebRequest();
 #else
                 yield return w.Send();
 #endif
 
-            while (w.isDone == false)
-            {
-                yield return null;
-            }
+                while (w.isDone == false)
+                    yield return null;
 
 #if UNITY_2017_1_OR_NEWER
-            if (w.isNetworkError || w.isHttpError)
+                if (w.isNetworkError || w.isHttpError)
 #else
                 if (w.isError)
 #endif
-            {
-                if (errorCallback != null)
                 {
-                    errorCallback(w.error);
+                    if (errorCallback != null)
+                    {
+                        errorCallback(w.error);
+                    }
                 }
-            }
-            else
-            {
-                if (successCallback != null)
+                else
                 {
-                    successCallback(w.downloadHandler.text);
+                    if (successCallback != null)
+                    {
+                        successCallback(w.downloadHandler.text);
+                    }
                 }
             }
         }
@@ -296,7 +296,7 @@ namespace Bolt.Utils
         public static int EmailAlreadyRegistered = 8;
         public static int InvalidParameters = 12;
 
-        public static readonly Dictionary<int, string> ReturnCodes = new()
+        public static readonly Dictionary<int, string> ReturnCodes = new Dictionary<int, string>()
         {
             {Success, "Success"},
             {EmailAlreadyRegistered, "Email Already Registered"},

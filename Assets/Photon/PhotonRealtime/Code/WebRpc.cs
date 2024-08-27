@@ -19,9 +19,10 @@ namespace Photon.Realtime
     using System.Collections.Generic;
     using ExitGames.Client.Photon;
 
-#if SUPPORTED_UNITY || NETFX_CORE
+    #if SUPPORTED_UNITY || NETFX_CORE
+    using Hashtable = ExitGames.Client.Photon.Hashtable;
     using SupportClass = ExitGames.Client.Photon.SupportClass;
-#endif
+    #endif
 
 
     /// <summary>Reads an operation response of a WebRpc and provides convenient access to most common values.</summary>
@@ -102,7 +103,7 @@ namespace Photon.Realtime
     public class WebFlags
     {
 
-        public static readonly WebFlags Default = new(0);
+        public readonly static WebFlags Default = new WebFlags(0);
         public byte WebhookFlags;
         /// <summary>
         /// Indicates whether to forward HTTP request to web service or not.
@@ -110,15 +111,14 @@ namespace Photon.Realtime
         public bool HttpForward
         {
             get { return (WebhookFlags & HttpForwardConst) != 0; }
-            set
-            {
+            set {
                 if (value)
                 {
                     WebhookFlags |= HttpForwardConst;
                 }
                 else
                 {
-                    WebhookFlags = (byte)(WebhookFlags & ~(1 << 0));
+                    WebhookFlags = (byte) (WebhookFlags & ~(1 << 0));
                 }
             }
         }
@@ -129,8 +129,7 @@ namespace Photon.Realtime
         public bool SendAuthCookie
         {
             get { return (WebhookFlags & SendAuthCookieConst) != 0; }
-            set
-            {
+            set {
                 if (value)
                 {
                     WebhookFlags |= SendAuthCookieConst;
@@ -148,8 +147,7 @@ namespace Photon.Realtime
         public bool SendSync
         {
             get { return (WebhookFlags & SendSyncConst) != 0; }
-            set
-            {
+            set {
                 if (value)
                 {
                     WebhookFlags |= SendSyncConst;
@@ -167,8 +165,7 @@ namespace Photon.Realtime
         public bool SendState
         {
             get { return (WebhookFlags & SendStateConst) != 0; }
-            set
-            {
+            set {
                 if (value)
                 {
                     WebhookFlags |= SendStateConst;

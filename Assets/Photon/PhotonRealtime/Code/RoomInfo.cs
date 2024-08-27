@@ -17,10 +17,13 @@
 namespace Photon.Realtime
 {
     using System;
+    using System.Collections;
+    using ExitGames.Client.Photon;
 
-#if SUPPORTED_UNITY || NETFX_CORE
+    #if SUPPORTED_UNITY || NETFX_CORE
     using Hashtable = ExitGames.Client.Photon.Hashtable;
-#endif
+    using SupportClass = ExitGames.Client.Photon.SupportClass;
+    #endif
 
 
     /// <summary>
@@ -37,7 +40,7 @@ namespace Photon.Realtime
         public bool RemovedFromList;
 
         /// <summary>Backing field for property.</summary>
-        private Hashtable customProperties = new();
+        private Hashtable customProperties = new Hashtable();
 
         /// <summary>Backing field for property.</summary>
         protected int maxPlayers = 0;
@@ -164,7 +167,8 @@ namespace Photon.Realtime
         /// </summary>
         public override bool Equals(object other)
         {
-            return other is RoomInfo otherRoomInfo && this.Name.Equals(otherRoomInfo.name);
+            RoomInfo otherRoomInfo = other as RoomInfo;
+            return (otherRoomInfo != null && this.Name.Equals(otherRoomInfo.name));
         }
 
         /// <summary>
@@ -248,17 +252,17 @@ namespace Photon.Realtime
                 this.propertiesListedInLobby = propertiesToCache[GamePropertyKey.PropsListedInLobby] as string[];
             }
 
-            if (propertiesToCache.ContainsKey(GamePropertyKey.ExpectedUsers))
+            if (propertiesToCache.ContainsKey((byte)GamePropertyKey.ExpectedUsers))
             {
                 this.expectedUsers = (string[])propertiesToCache[GamePropertyKey.ExpectedUsers];
             }
 
-            if (propertiesToCache.ContainsKey(GamePropertyKey.EmptyRoomTtl))
+            if (propertiesToCache.ContainsKey((byte)GamePropertyKey.EmptyRoomTtl))
             {
                 this.emptyRoomTtl = (int)propertiesToCache[GamePropertyKey.EmptyRoomTtl];
             }
 
-            if (propertiesToCache.ContainsKey(GamePropertyKey.PlayerTtl))
+            if (propertiesToCache.ContainsKey((byte)GamePropertyKey.PlayerTtl))
             {
                 this.playerTtl = (int)propertiesToCache[GamePropertyKey.PlayerTtl];
             }

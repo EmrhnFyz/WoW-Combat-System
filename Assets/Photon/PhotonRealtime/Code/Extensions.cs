@@ -16,14 +16,17 @@
 namespace Photon.Realtime
 {
     using System.Collections;
-    using System.Collections.Generic;
+	using System.Collections.Generic;
+    using ExitGames.Client.Photon;
 
-#if SUPPORTED_UNITY
-#endif
-#if SUPPORTED_UNITY || NETFX_CORE
+    #if SUPPORTED_UNITY
+    using UnityEngine;
+    using Debug = UnityEngine.Debug;
+    #endif
+    #if SUPPORTED_UNITY || NETFX_CORE
     using Hashtable = ExitGames.Client.Photon.Hashtable;
     using SupportClass = ExitGames.Client.Photon.SupportClass;
-#endif
+    #endif
 
 
     /// <summary>
@@ -43,7 +46,7 @@ namespace Photon.Realtime
                 return;
             }
 
-            foreach (var key in addHash.Keys)
+            foreach (object key in addHash.Keys)
             {
                 target[key] = addHash[key];
             }
@@ -64,7 +67,7 @@ namespace Photon.Realtime
                 return;
             }
 
-            foreach (var key in addHash.Keys)
+            foreach (object key in addHash.Keys)
             {
                 // only merge keys of type string
                 if (key is string)
@@ -83,26 +86,23 @@ namespace Photon.Realtime
             return SupportClass.DictionaryToString(origin, false);
         }
 
-        /// <summary>Helper method for debugging of List<T> content. Using this is not performant.</summary>
-        /// <remarks>Should only be used for debugging as necessary.</remarks>
-        /// <param name="data">Any List<T> where T implements .ToString().</param>
-        /// <returns>A comma-separated string containing each value's ToString().</returns>
-        public static string ToStringFull<T>(this List<T> data)
-        {
-            if (data == null)
-            {
-                return "null";
-            }
+		/// <summary>Helper method for debugging of List<T> content. Using this is not performant.</summary>
+		/// <remarks>Should only be used for debugging as necessary.</remarks>
+		/// <param name="data">Any List<T> where T implements .ToString().</param>
+		/// <returns>A comma-separated string containing each value's ToString().</returns>
+		public static string ToStringFull<T>(this List<T> data)
+		{
+			if (data == null) return "null";
 
-            var sb = new string[data.Count];
-            for (var i = 0; i < data.Count; i++)
-            {
-                object o = data[i];
-                sb[i] = (o != null) ? o.ToString() : "null";
-            }
+			string[] sb = new string[data.Count];
+			for (int i = 0; i < data.Count; i++)
+			{
+				object o = data[i];
+				sb[i] = (o != null) ? o.ToString() : "null";
+			}
 
-            return string.Join(", ", sb);
-        }
+			return string.Join(", ", sb);
+		}
 
         /// <summary>Helper method for debugging of object[] content. Using this is not performant.</summary>
         /// <remarks>Should only be used for debugging as necessary.</remarks>
@@ -110,15 +110,12 @@ namespace Photon.Realtime
         /// <returns>A comma-separated string containing each value's ToString().</returns>
         public static string ToStringFull(this object[] data)
         {
-            if (data == null)
-            {
-                return "null";
-            }
+            if (data == null) return "null";
 
-            var sb = new string[data.Length];
-            for (var i = 0; i < data.Length; i++)
+            string[] sb = new string[data.Length];
+            for (int i = 0; i < data.Length; i++)
             {
-                var o = data[i];
+                object o = data[i];
                 sb[i] = (o != null) ? o.ToString() : "null";
             }
 
@@ -137,10 +134,10 @@ namespace Photon.Realtime
         /// <returns>New Hashtable containing only string-typed keys of the original.</returns>
         public static Hashtable StripToStringKeys(this IDictionary original)
         {
-            var target = new Hashtable();
+            Hashtable target = new Hashtable();
             if (original != null)
             {
-                foreach (var key in original.Keys)
+                foreach (object key in original.Keys)
                 {
                     if (key is string)
                     {
@@ -163,7 +160,7 @@ namespace Photon.Realtime
         /// <returns>New Hashtable containing only string-typed keys of the original.</returns>
         public static Hashtable StripToStringKeys(this Hashtable original)
         {
-            var target = new Hashtable();
+            Hashtable target = new Hashtable();
             if (original != null)
             {
                 foreach (DictionaryEntry entry in original)
@@ -184,7 +181,7 @@ namespace Photon.Realtime
         /// By making keysWithNullValue a static variable to clear before using, allocations only happen during the warm-up phase
         /// as the list needs to grow. Once it hit the high water mark for keys you need to remove.
         /// </remarks>
-        private static readonly List<object> keysWithNullValue = new();
+        private static readonly List<object> keysWithNullValue = new List<object>();
 
         /// <summary>Removes all keys with null values.</summary>
         /// <remarks>
@@ -206,7 +203,7 @@ namespace Photon.Realtime
                     }
                 }
 
-                for (var i = 0; i < keysWithNullValue.Count; i++)
+                for (int i = 0; i < keysWithNullValue.Count; i++)
                 {
                     var key = keysWithNullValue[i];
                     original.Remove(key);
@@ -234,7 +231,7 @@ namespace Photon.Realtime
                     }
                 }
 
-                for (var i = 0; i < keysWithNullValue.Count; i++)
+                for (int i = 0; i < keysWithNullValue.Count; i++)
                 {
                     var key = keysWithNullValue[i];
                     original.Remove(key);
@@ -257,7 +254,7 @@ namespace Photon.Realtime
                 return false;
             }
 
-            for (var index = 0; index < target.Length; index++)
+            for (int index = 0; index < target.Length; index++)
             {
                 if (target[index] == nr)
                 {

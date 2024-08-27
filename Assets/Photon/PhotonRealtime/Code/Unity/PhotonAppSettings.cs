@@ -29,12 +29,12 @@ namespace Photon.Realtime
         [Tooltip("Core Photon Server/Cloud settings.")]
         public AppSettings AppSettings;
 
-#if UNITY_EDITOR
+        #if UNITY_EDITOR
         [HideInInspector]
         public bool DisableAutoOpenWizard;
         //public bool ShowSettings;
         //public bool DevRegionSetOnce;
-#endif
+        #endif
 
         private static PhotonAppSettings instance;
 
@@ -65,10 +65,10 @@ namespace Photon.Realtime
             }
 
 
-#if UNITY_EDITOR
+            #if UNITY_EDITOR
             // let's check if the AssetDatabase finds the file; aimed to avoid multiple files being created, potentially a futile step
             AssetDatabase.Refresh();
-#endif
+            #endif
 
             // try to load the resource / asset (ServerSettings a.k.a. PhotonServerSettings)
             instance = (PhotonAppSettings)Resources.Load(typeof(PhotonAppSettings).Name, typeof(PhotonAppSettings));
@@ -93,10 +93,10 @@ namespace Photon.Realtime
             }
 
             // in the editor, store the settings file as it's not loaded
-#if UNITY_EDITOR
-            var punResourcesDirectory = "Assets/Photon/Resources/";
-            var serverSettingsAssetPath = punResourcesDirectory + typeof(PhotonAppSettings).Name + ".asset";
-            var serverSettingsDirectory = Path.GetDirectoryName(serverSettingsAssetPath);
+            #if UNITY_EDITOR
+            string punResourcesDirectory = "Assets/Photon/Resources/";
+            string serverSettingsAssetPath = punResourcesDirectory + typeof(PhotonAppSettings).Name + ".asset";
+            string serverSettingsDirectory = Path.GetDirectoryName(serverSettingsAssetPath);
 
             if (!Directory.Exists(serverSettingsDirectory))
             {
@@ -109,7 +109,7 @@ namespace Photon.Realtime
 
 
             //Debug.Log("Settings stored to DB."); // DEBUG
-#endif
+            #endif
         }
     }
 }

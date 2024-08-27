@@ -22,10 +22,13 @@ namespace Photon.Realtime
 {
     using System;
     using System.Collections.Generic;
-    using System.IO;
     using System.Linq;
+
     using UnityEditor;
     using UnityEngine;
+
+    using System.IO;
+    using System.Text;
     using UnityEngine.Networking;
 
 
@@ -35,13 +38,13 @@ namespace Photon.Realtime
         /// <summary>Stores a flag which tells Editor scripts if the PhotonEditor.OnProjectChanged got called since initialization.</summary>
         /// <remarks>If not, the AssetDatabase is likely not usable yet and instances of ScriptableObject can't be loaded.</remarks>
         [Obsolete("Directly check EditorApplication.isUpdating to figure out if assets are being imported at the given time.")]
-        public static bool ProjectChangedWasCalled
+        public static bool ProjectChangedWasCalled 
         {
             get
             {
                 return UnityEditor.EditorApplication.isUpdating;
             }
-        }
+        } 
 
 
         /// <summary>True if the ChatClient of the Photon Chat API is available. If so, the editor may (e.g.) show additional options in settings.</summary>
@@ -64,9 +67,9 @@ namespace Photon.Realtime
             HasVoice = Type.GetType("Photon.Voice.VoiceClient, Assembly-CSharp") != null || Type.GetType("Photon.Voice.VoiceClient, Assembly-CSharp-firstpass") != null || Type.GetType("Photon.Voice.VoiceClient, PhotonVoice.API") != null;
             HasChat = Type.GetType("Photon.Chat.ChatClient, Assembly-CSharp") != null || Type.GetType("Photon.Chat.ChatClient, Assembly-CSharp-firstpass") != null || Type.GetType("Photon.Chat.ChatClient, PhotonChat") != null;
             HasPun = Type.GetType("Photon.Pun.PhotonNetwork, Assembly-CSharp") != null || Type.GetType("Photon.Pun.PhotonNetwork, Assembly-CSharp-firstpass") != null || Type.GetType("Photon.Pun.PhotonNetwork, PhotonUnityNetworking") != null;
-#if FUSION_WEAVER
+            #if FUSION_WEAVER
             HasFusion = true;
-#endif
+            #endif
             PhotonEditorUtils.HasCheckedProducts = true;
 
             if (EditorPrefs.HasKey("DisablePun") && EditorPrefs.GetBool("DisablePun"))
@@ -77,21 +80,21 @@ namespace Photon.Realtime
             if (HasPun)
             {
                 // MOUNTING SYMBOLS
-#if !PHOTON_UNITY_NETWORKING
+                #if !PHOTON_UNITY_NETWORKING
                 AddScriptingDefineSymbolToAllBuildTargetGroups("PHOTON_UNITY_NETWORKING");
-#endif
+                #endif
 
-#if !PUN_2_0_OR_NEWER
+                #if !PUN_2_0_OR_NEWER
                 AddScriptingDefineSymbolToAllBuildTargetGroups("PUN_2_0_OR_NEWER");
-#endif
+                #endif
 
-#if !PUN_2_OR_NEWER
+                #if !PUN_2_OR_NEWER
                 AddScriptingDefineSymbolToAllBuildTargetGroups("PUN_2_OR_NEWER");
-#endif
+                #endif
 
-#if !PUN_2_19_OR_NEWER
+                #if !PUN_2_19_OR_NEWER
                 AddScriptingDefineSymbolToAllBuildTargetGroups("PUN_2_19_OR_NEWER");
-#endif
+                #endif
             }
         }
 
@@ -149,7 +152,7 @@ namespace Photon.Realtime
                     .Select(d => d.Trim())
                     .ToList();
 
-                var newDefineSymbols = new List<string>();
+                List<string> newDefineSymbols = new List<string>();
                 foreach (var symbol in defineSymbols)
                 {
                     if ("PHOTON_UNITY_NETWORKING".Equals(symbol) || symbol.StartsWith("PUN_2_"))
@@ -200,21 +203,21 @@ namespace Photon.Realtime
             return GetParent(dir.Parent.FullName, parentName);
         }
 
-        /// <summary>
-        /// Check if a GameObject is a prefab asset or part of a prefab asset, as opposed to an instance in the scene hierarchy
-        /// </summary>
-        /// <returns><c>true</c>, if a prefab asset or part of it, <c>false</c> otherwise.</returns>
-        /// <param name="go">The GameObject to check</param>
-        public static bool IsPrefab(GameObject go)
-        {
-#if UNITY_2021_2_OR_NEWER
+		/// <summary>
+		/// Check if a GameObject is a prefab asset or part of a prefab asset, as opposed to an instance in the scene hierarchy
+		/// </summary>
+		/// <returns><c>true</c>, if a prefab asset or part of it, <c>false</c> otherwise.</returns>
+		/// <param name="go">The GameObject to check</param>
+		public static bool IsPrefab(GameObject go)
+		{
+            #if UNITY_2021_2_OR_NEWER
             return UnityEditor.SceneManagement.PrefabStageUtility.GetPrefabStage(go) != null || EditorUtility.IsPersistent(go);
-#elif UNITY_2018_3_OR_NEWER
+            #elif UNITY_2018_3_OR_NEWER
             return UnityEditor.Experimental.SceneManagement.PrefabStageUtility.GetPrefabStage(go) != null || EditorUtility.IsPersistent(go);
-#else
+            #else
             return EditorUtility.IsPersistent(go);
-#endif
-        }
+			#endif
+		}
 
         //https://forum.unity.com/threads/using-unitywebrequest-in-editor-tools.397466/#post-4485181
         public static void StartCoroutine(System.Collections.IEnumerator update)
@@ -242,47 +245,47 @@ namespace Photon.Realtime
 
         public static System.Collections.IEnumerator HttpPost(string url, Dictionary<string, string> headers, byte[] payload, Action<string> successCallback, Action<string> errorCallback)
         {
-            using var w = new UnityWebRequest(url, "POST");
-            if (payload != null)
+            using (UnityWebRequest w = new UnityWebRequest(url, "POST"))
             {
-                w.uploadHandler = new UploadHandlerRaw(payload);
-            }
-            w.downloadHandler = new DownloadHandlerBuffer();
-            if (headers != null)
-            {
-                foreach (KeyValuePair<string, string> header in headers)
+                if (payload != null)
                 {
-                    w.SetRequestHeader(header.Key, header.Value);
+                    w.uploadHandler = new UploadHandlerRaw(payload);
                 }
-            }
+                w.downloadHandler = new DownloadHandlerBuffer();
+                if (headers != null)
+                {
+                    foreach (var header in headers)
+                    {
+                        w.SetRequestHeader(header.Key, header.Value);
+                    }
+                }
 
-#if UNITY_2017_2_OR_NEWER
-            yield return w.SendWebRequest();
-#else
+                #if UNITY_2017_2_OR_NEWER
+                yield return w.SendWebRequest();
+                #else
                 yield return w.Send();
-#endif
+                #endif
 
-            while (w.isDone == false)
-            {
-                yield return null;
-            }
+                while (w.isDone == false)
+                    yield return null;
 
-#if UNITY_2020_2_OR_NEWER
-            if (w.result is UnityWebRequest.Result.ProtocolError or UnityWebRequest.Result.ConnectionError or UnityWebRequest.Result.DataProcessingError)
-#elif UNITY_2017_1_OR_NEWER
+                #if UNITY_2020_2_OR_NEWER
+                if (w.result == UnityWebRequest.Result.ProtocolError || w.result == UnityWebRequest.Result.ConnectionError || w.result == UnityWebRequest.Result.DataProcessingError)
+                #elif UNITY_2017_1_OR_NEWER
                 if (w.isNetworkError || w.isHttpError)
-#endif
-            {
-                if (errorCallback != null)
+                #endif
                 {
-                    errorCallback(w.error);
+                    if (errorCallback != null)
+                    {
+                        errorCallback(w.error);
+                    }
                 }
-            }
-            else
-            {
-                if (successCallback != null)
+                else
                 {
-                    successCallback(w.downloadHandler.text);
+                    if (successCallback != null)
+                    {
+                        successCallback(w.downloadHandler.text);
+                    }
                 }
             }
         }
@@ -294,8 +297,8 @@ namespace Photon.Realtime
         /// <returns>Returns the new isExpanded value.</returns>
         public static bool Foldout(this SerializedProperty isExpanded, GUIContent label)
         {
-            Rect rect = EditorGUILayout.GetControlRect();
-            var newvalue = EditorGUI.Toggle(new Rect(rect) { xMin = rect.xMin + 2 }, GUIContent.none, isExpanded.boolValue, (GUIStyle)"Foldout");
+            var rect = EditorGUILayout.GetControlRect();
+            bool newvalue = EditorGUI.Toggle(new Rect(rect) { xMin = rect.xMin + 2 }, GUIContent.none, isExpanded.boolValue, (GUIStyle)"Foldout");
             EditorGUI.LabelField(new Rect(rect) { xMin = rect.xMin + 15 }, label);
             if (newvalue != isExpanded.boolValue)
             {
@@ -313,8 +316,8 @@ namespace Photon.Realtime
         /// <returns>Returns the new isExpanded value.</returns>
         public static bool Foldout(this bool isExpanded, GUIContent label)
         {
-            Rect rect = EditorGUILayout.GetControlRect();
-            var newvalue = EditorGUI.Toggle(new Rect(rect) { xMin = rect.xMin + 2 }, GUIContent.none, isExpanded, (GUIStyle)"Foldout");
+            var rect = EditorGUILayout.GetControlRect();
+            bool newvalue = EditorGUI.Toggle(new Rect(rect) { xMin = rect.xMin + 2 }, GUIContent.none, isExpanded, (GUIStyle)"Foldout");
             EditorGUI.LabelField(new Rect(rect) { xMin = rect.xMin + 15 }, label);
             return newvalue;
         }

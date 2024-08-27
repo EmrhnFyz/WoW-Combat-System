@@ -19,18 +19,18 @@
 [AttributeUsage(AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
 public sealed class BoltExecutionOrderAttribute : Attribute
 {
-    private readonly int _executionOrder;
+	readonly int _executionOrder;
 
-    public BoltExecutionOrderAttribute(int order)
-    {
-        _executionOrder = order;
-    }
+	public BoltExecutionOrderAttribute(int order)
+	{
+		_executionOrder = order;
+	}
 
-    /// <summary>
-    /// The order of this script in execution (lower is earlier)
-    /// </summary>
-    public int executionOrder
-    {
-        get { return _executionOrder; }
-    }
+	/// <summary>
+	/// The order of this script in execution (lower is earlier)
+	/// </summary>
+	public int executionOrder
+	{
+		get { return _executionOrder; }
+	}
 }

@@ -30,13 +30,14 @@ namespace Photon.Realtime
     using ExitGames.Client.Photon;
     using System.Linq;
 
-#if SUPPORTED_UNITY
+    #if SUPPORTED_UNITY
     using UnityEngine;
     using Debug = UnityEngine.Debug;
-#endif
-#if SUPPORTED_UNITY || NETFX_CORE
+    #endif
+    #if SUPPORTED_UNITY || NETFX_CORE
+    using Hashtable = ExitGames.Client.Photon.Hashtable;
     using SupportClass = ExitGames.Client.Photon.SupportClass;
-#endif
+    #endif
 
 
     /// <summary>
@@ -126,7 +127,7 @@ namespace Photon.Realtime
         /// <summary>Provides a list of regions and their pings as string.</summary>
         public string GetResults()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
 
             sb.AppendFormat("Region Pinging Result: {0}\n", this.BestRegion.ToString());
             foreach (RegionPinger region in this.pingerList)
@@ -151,7 +152,10 @@ namespace Photon.Realtime
             {
                 return;
             }
-            if (opGetRegions[ParameterCode.Region] is not string[] regions || opGetRegions[ParameterCode.Address] is not string[] servers || regions.Length != servers.Length)
+
+            string[] regions = opGetRegions[ParameterCode.Region] as string[];
+            string[] servers = opGetRegions[ParameterCode.Address] as string[];
+            if (regions == null || servers == null || regions.Length != servers.Length)
             {
                 //TODO: log error
                 //Debug.LogError("The region arrays from Name Server are not ok. Must be non-null and same length. " + (regions == null) + " " + (servers == null) + "\n" + opGetRegions.ToStringFull());
@@ -161,15 +165,15 @@ namespace Photon.Realtime
             this.bestRegionCache = null;
             this.EnabledRegions = new List<Region>(regions.Length);
 
-            for (var i = 0; i < regions.Length; i++)
+            for (int i = 0; i < regions.Length; i++)
             {
-                var server = servers[i];
+                string server = servers[i];
                 if (PortToPingOverride != 0)
                 {
                     server = LoadBalancingClient.ReplacePortWithAlternative(servers[i], PortToPingOverride);
                 }
 
-                var tmp = new Region(regions[i], server);
+                Region tmp = new Region(regions[i], server);
                 if (string.IsNullOrEmpty(tmp.Code))
                 {
                     continue;
@@ -182,7 +186,7 @@ namespace Photon.Realtime
             this.availableRegionCodes = string.Join(",", regions);
         }
 
-        private readonly List<RegionPinger> pingerList = new();
+        private readonly List<RegionPinger> pingerList = new List<RegionPinger>();
         private Action<RegionHandler> onCompleteCall;
         private int previousPing;
 
@@ -199,9 +203,9 @@ namespace Photon.Realtime
         /// <see cref="Abort"/>
         public bool Aborted { get; private set; }
 
-#if SUPPORTED_UNITY
+        #if SUPPORTED_UNITY
         private MonoBehaviourEmpty emptyMonoBehavior;
-#endif
+        #endif
 
         /// <summary>Creates a new RegionHandler.</summary>
         /// <param name="masterServerPortOverride">If non-zero, this port will be used to ping Master Servers on.</param>
@@ -235,35 +239,35 @@ namespace Photon.Realtime
             this.IsPinging = true;
             this.previousSummaryProvided = previousSummary;
 
-#if SUPPORTED_UNITY
+            #if SUPPORTED_UNITY
             this.emptyMonoBehavior?.SelfDestroy();
             this.emptyMonoBehavior = MonoBehaviourEmpty.BuildInstance(nameof(RegionHandler));
             this.emptyMonoBehavior.onCompleteCall = onCompleteCallback;
             this.onCompleteCall = emptyMonoBehavior.CompleteOnMainThread;
-#else
+            #else
             this.onCompleteCall = onCompleteCallback;
-#endif
+            #endif
 
             if (string.IsNullOrEmpty(previousSummary))
             {
                 return this.PingEnabledRegions();
             }
 
-            var values = previousSummary.Split(';');
+            string[] values = previousSummary.Split(';');
             if (values.Length < 3)
             {
                 return this.PingEnabledRegions();
             }
 
             int prevBestRegionPing;
-            var secondValueIsInt = Int32.TryParse(values[1], out prevBestRegionPing);
+            bool secondValueIsInt = Int32.TryParse(values[1], out prevBestRegionPing);
             if (!secondValueIsInt)
             {
                 return this.PingEnabledRegions();
             }
 
-            var prevBestRegionCode = values[0];
-            var prevAvailableRegionCodes = values[2];
+            string prevBestRegionCode = values[0];
+            string prevAvailableRegionCodes = values[2];
 
 
             if (string.IsNullOrEmpty(prevBestRegionCode))
@@ -288,7 +292,7 @@ namespace Photon.Realtime
 
 
             Region preferred = this.EnabledRegions.Find(r => r.Code.Equals(prevBestRegionCode));
-            var singlePinger = new RegionPinger(preferred, this.OnPreferredRegionPinged);
+            RegionPinger singlePinger = new RegionPinger(preferred, this.OnPreferredRegionPinged);
 
             lock (this.pingerList)
             {
@@ -317,9 +321,9 @@ namespace Photon.Realtime
                 }
             }
 
-#if SUPPORTED_UNITY
+            #if SUPPORTED_UNITY
             this.emptyMonoBehavior?.SelfDestroy();
-#endif
+            #endif
         }
 
         private void OnPreferredRegionPinged(Region preferredRegion)
@@ -351,7 +355,7 @@ namespace Photon.Realtime
 
                 foreach (Region region in this.EnabledRegions)
                 {
-                    var rp = new RegionPinger(region, this.OnRegionDone);
+                    RegionPinger rp = new RegionPinger(region, this.OnRegionDone);
                     this.pingerList.Add(rp);
                     rp.Start(); // TODO: check return value
                 }
@@ -430,27 +434,27 @@ namespace Photon.Realtime
 
             // using each type explicitly in the conditional code, makes sure Unity doesn't strip the class / constructor.
 
-#if !UNITY_EDITOR && NETFX_CORE
+            #if !UNITY_EDITOR && NETFX_CORE
             if (RegionHandler.PingImplementation == null || RegionHandler.PingImplementation == typeof(PingWindowsStore))
             {
                 ping = new PingWindowsStore();
             }
-#elif NATIVE_SOCKETS || NO_SOCKET
+            #elif NATIVE_SOCKETS || NO_SOCKET
             if (RegionHandler.PingImplementation == null || RegionHandler.PingImplementation == typeof(PingNativeDynamic))
             {
                 ping = new PingNativeDynamic();
             }
-#elif UNITY_WEBGL
+            #elif UNITY_WEBGL
             if (RegionHandler.PingImplementation == null || RegionHandler.PingImplementation == typeof(PingHttp))
             {
                 ping = new PingHttp();
             }
-#else
+            #else
             if (RegionHandler.PingImplementation == null || RegionHandler.PingImplementation == typeof(PingMono))
             {
                 ping = new PingMono();
             }
-#endif
+            #endif
 
             if (ping == null)
             {
@@ -476,11 +480,11 @@ namespace Photon.Realtime
         {
             // all addresses for Photon region servers will contain a :port ending. this needs to be removed first.
             // PhotonPing.StartPing() requires a plain (IP) address without port or protocol-prefix (on all but Windows 8.1 and WebGL platforms).
-            var address = this.region.HostAndPort;
-            var indexOfColon = address.LastIndexOf(':');
+            string address = this.region.HostAndPort;
+            int indexOfColon = address.LastIndexOf(':');
             if (indexOfColon > 1)
             {
-                address = address[..indexOfColon];
+                address = address.Substring(0, indexOfColon);
             }
             this.regionAddress = ResolveHost(address);
 
@@ -497,11 +501,11 @@ namespace Photon.Realtime
                 return false;
             }
 
-#if PING_VIA_COROUTINE
+            #if PING_VIA_COROUTINE
             MonoBehaviourEmpty.BuildInstance("RegionPing_" + this.region.Code).StartCoroutineAndDestroy(this.RegionPingCoroutine());
-#else
-            var queued = false;
-#if !NETFX_CORE
+            #else
+            bool queued = false;
+            #if !NETFX_CORE
             try
             {
                 queued = ThreadPool.QueueUserWorkItem(o => this.RegionPingThreaded());
@@ -510,12 +514,12 @@ namespace Photon.Realtime
             {
                 queued = false;
             }
-#endif
+            #endif
             if (!queued)
             {
                 SupportClass.StartBackgroundCalls(this.RegionPingThreaded, 0, "RegionPing_" + this.region.Code + "_" + this.region.Cluster);
             }
-#endif
+            #endif
 
 
             return true;
@@ -536,11 +540,11 @@ namespace Photon.Realtime
         {
             this.region.Ping = PingWhenFailed;
 
-            var rttSum = 0;
-            var replyCount = 0;
+            int rttSum = 0;
+            int replyCount = 0;
 
 
-            var sw = new Stopwatch();
+            Stopwatch sw = new Stopwatch();
             for (this.CurrentAttempt = 0; this.CurrentAttempt < Attempts; this.CurrentAttempt++)
             {
                 if (this.Aborted)
@@ -569,29 +573,29 @@ namespace Photon.Realtime
                         // if ping.Done() did not become true in MaxMilliseconsPerPing, ping.Successful is false and we apply MaxMilliseconsPerPing as rtt below
                         break;
                     }
-#if !NETFX_CORE
+                    #if !NETFX_CORE
                     System.Threading.Thread.Sleep(1);
-#endif
+                    #endif
                 }
 
 
                 sw.Stop();
-                var rtt = this.ping.Successful ? (int)sw.ElapsedMilliseconds : MaxMilliseconsPerPing;   // if the reply didn't match the sent ping
+                int rtt = this.ping.Successful ? (int)sw.ElapsedMilliseconds : MaxMilliseconsPerPing;   // if the reply didn't match the sent ping
                 this.rttResults.Add(rtt);
 
                 rttSum += rtt;
                 replyCount++;
-                this.region.Ping = rttSum / replyCount;
+                this.region.Ping = (int)((rttSum) / replyCount);
 
-#if !NETFX_CORE
-                var i = 4;
+                #if !NETFX_CORE
+                int i = 4;
                 while (!this.ping.Done() && i > 0)
                 {
                     i--;
                     System.Threading.Thread.Sleep(100);
                 }
                 System.Threading.Thread.Sleep(10);
-#endif
+                #endif
             }
 
 
@@ -599,17 +603,17 @@ namespace Photon.Realtime
             this.Done = true;
             this.ping.Dispose();
 
-            var bestRtt = this.rttResults.Min();
-            var worstRtt = this.rttResults.Max();
-            var weighedRttSum = rttSum - worstRtt + bestRtt;
-            this.region.Ping = weighedRttSum / replyCount;   // now, we can create a weighted ping value
+            int bestRtt = this.rttResults.Min();
+            int worstRtt = this.rttResults.Max();
+            int weighedRttSum = rttSum - worstRtt + bestRtt;
+            this.region.Ping = (int)(weighedRttSum / replyCount);   // now, we can create a weighted ping value
 
             this.onDoneCall(this.region);
             return false;
         }
 
 
-#if SUPPORTED_UNITY
+        #if SUPPORTED_UNITY
 
         /// <remarks>
         /// Affected by frame-rate of app, as this Coroutine checks the socket for a result once per frame.
@@ -618,11 +622,11 @@ namespace Photon.Realtime
         {
             this.region.Ping = PingWhenFailed;
 
-            var rttSum = 0;
-            var replyCount = 0;
+            int rttSum = 0;
+            int replyCount = 0;
 
 
-            var sw = new Stopwatch();
+            Stopwatch sw = new Stopwatch();
             for (this.CurrentAttempt = 0; this.CurrentAttempt < Attempts; this.CurrentAttempt++)
             {
                 if (this.Aborted)
@@ -657,15 +661,15 @@ namespace Photon.Realtime
 
 
                 sw.Stop();
-                var rtt = this.ping.Successful ? (int)sw.ElapsedMilliseconds : MaxMilliseconsPerPing; // if the reply didn't match the sent ping
+                int rtt = this.ping.Successful ? (int)sw.ElapsedMilliseconds : MaxMilliseconsPerPing; // if the reply didn't match the sent ping
                 this.rttResults.Add(rtt);
 
 
                 rttSum += rtt;
                 replyCount++;
-                this.region.Ping = rttSum / replyCount;
+                this.region.Ping = (int)((rttSum) / replyCount);
 
-                var i = 4;
+                int i = 4;
                 while (!this.ping.Done() && i > 0)
                 {
                     i--;
@@ -679,14 +683,14 @@ namespace Photon.Realtime
             //Debug.Log("Done: "+ this.region.Code);
             this.Done = true;
             this.ping.Dispose();
-            var bestRtt = this.rttResults.Min();
-            var worstRtt = this.rttResults.Max();
-            var weighedRttSum = rttSum - worstRtt + bestRtt;
-            this.region.Ping = weighedRttSum / replyCount; // now, we can create a weighted ping value
+            int bestRtt = this.rttResults.Min();
+            int worstRtt = this.rttResults.Max();
+            int weighedRttSum = rttSum - worstRtt + bestRtt;
+            this.region.Ping = (int)(weighedRttSum / replyCount); // now, we can create a weighted ping value
             this.onDoneCall(this.region);
             yield return null;
         }
-#endif
+        #endif
 
 
         /// <summary>Gets this region's results as string summary.</summary>
@@ -707,22 +711,22 @@ namespace Photon.Realtime
         public static string ResolveHost(string hostName)
         {
 
-            if (hostName.StartsWith("wss://"))
-            {
-                hostName = hostName[6..];
-            }
-            if (hostName.StartsWith("ws://"))
-            {
-                hostName = hostName[5..];
-            }
+			if (hostName.StartsWith("wss://"))
+			{
+				hostName = hostName.Substring(6);
+			}
+			if (hostName.StartsWith("ws://"))
+			{
+				hostName = hostName.Substring(5);
+			}
 
-            var ipv4Address = string.Empty;
+            string ipv4Address = string.Empty;
 
             try
             {
-#if UNITY_WSA || NETFX_CORE || UNITY_WEBGL
+                #if UNITY_WSA || NETFX_CORE || UNITY_WEBGL
                 return hostName;
-#else
+                #else
 
                 IPAddress[] address = Dns.GetHostAddresses(hostName);
                 if (address.Length == 1)
@@ -732,7 +736,7 @@ namespace Photon.Realtime
 
                 // if we got more addresses, try to pick a IPv6 one
                 // checking ipAddress.ToString() means we don't have to import System.Net.Sockets, which is not available on some platforms (Metro)
-                for (var index = 0; index < address.Length; index++)
+                for (int index = 0; index < address.Length; index++)
                 {
                     IPAddress ipAddress = address[index];
                     if (ipAddress != null)
@@ -747,7 +751,7 @@ namespace Photon.Realtime
                         }
                     }
                 }
-#endif
+                #endif
             }
             catch (System.Exception e)
             {
@@ -758,7 +762,7 @@ namespace Photon.Realtime
         }
     }
 
-#if SUPPORTED_UNITY
+    #if SUPPORTED_UNITY
     internal class MonoBehaviourEmpty : MonoBehaviour
     {
         internal Action<RegionHandler> onCompleteCall;
@@ -766,7 +770,7 @@ namespace Photon.Realtime
 
         public static MonoBehaviourEmpty BuildInstance(string id = null)
         {
-            var go = new GameObject(id ?? nameof(MonoBehaviourEmpty));
+            GameObject go = new GameObject(id ?? nameof(MonoBehaviourEmpty));
             DontDestroyOnLoad(go);
 
             return go.AddComponent<MonoBehaviourEmpty>();
@@ -774,7 +778,7 @@ namespace Photon.Realtime
 
         public void SelfDestroy() => Destroy(this.gameObject);
 
-        private void Update()
+        void Update()
         {
             if (this.obj != null)
             {
@@ -801,5 +805,5 @@ namespace Photon.Realtime
             }
         }
     }
-#endif
+    #endif
 }

@@ -19,9 +19,10 @@
 namespace Photon.Realtime
 {
     using System;
+    using UnityEngine;
     using System.Collections.Generic;
     using System.Text.RegularExpressions;
-    using UnityEngine;
+    using ExitGames.Client.Photon;
 
 
     /// <summary>
@@ -31,7 +32,7 @@ namespace Photon.Realtime
     {
         private const string ServiceUrl = "https://partner.photonengine.com/api/{0}/User/RegisterEx";
 
-        private readonly Dictionary<string, string> RequestHeaders = new()
+        private readonly Dictionary<string, string> RequestHeaders = new Dictionary<string, string>
         {
             { "Content-Type", "application/json" },
             { "x-functions-key", "" }
@@ -81,14 +82,14 @@ namespace Photon.Realtime
                 return false;
             }
 
-            var serviceTypeString = GetServiceTypesFromList(serviceTypes);
+            string serviceTypeString = GetServiceTypesFromList(serviceTypes);
             if (string.IsNullOrEmpty(serviceTypeString))
             {
                 Debug.LogError("serviceTypes string is null or empty");
                 return false;
             }
 
-            var fullUrl = GetUrlWithQueryStringEscaped(email, serviceTypeString, origin);
+            string fullUrl = GetUrlWithQueryStringEscaped(email, serviceTypeString, origin);
 
             RequestHeaders["x-functions-key"] = string.IsNullOrEmpty(CustomToken) ? DefaultToken : CustomToken;
 
@@ -141,10 +142,10 @@ namespace Photon.Realtime
 
         private string GetUrlWithQueryStringEscaped(string email, string serviceTypes, string originAv)
         {
-            var emailEscaped = UnityEngine.Networking.UnityWebRequest.EscapeURL(email);
-            var st = UnityEngine.Networking.UnityWebRequest.EscapeURL(serviceTypes);
-            var uv = UnityEngine.Networking.UnityWebRequest.EscapeURL(Application.unityVersion);
-            var serviceUrl = string.Format(ServiceUrl, string.IsNullOrEmpty(CustomContext) ? DefaultContext : CustomContext);
+            string emailEscaped = UnityEngine.Networking.UnityWebRequest.EscapeURL(email);
+            string st = UnityEngine.Networking.UnityWebRequest.EscapeURL(serviceTypes);
+            string uv = UnityEngine.Networking.UnityWebRequest.EscapeURL(Application.unityVersion);
+            string serviceUrl = string.Format(ServiceUrl, string.IsNullOrEmpty(CustomContext) ? DefaultContext : CustomContext );
 
             return string.Format("{0}?email={1}&st={2}&uv={3}&av={4}", serviceUrl, emailEscaped, st, uv, originAv);
         }
@@ -161,14 +162,14 @@ namespace Photon.Realtime
                 // Unity's JsonUtility does not support deserializing Dictionary, we manually parse it, dirty & ugly af, better then using a 3rd party lib
                 if (res.ReturnCode == AccountServiceReturnCodes.Success)
                 {
-                    var parts = result.Split(new[] { "\"ApplicationIds\":{" }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] parts = result.Split(new[] { "\"ApplicationIds\":{" }, StringSplitOptions.RemoveEmptyEntries);
                     parts = parts[1].Split('}');
-                    var applicationIds = parts[0];
+                    string applicationIds = parts[0];
                     if (!string.IsNullOrEmpty(applicationIds))
                     {
                         parts = applicationIds.Split(new[] { ',', '"', ':' }, StringSplitOptions.RemoveEmptyEntries);
                         res.ApplicationIds = new Dictionary<string, string>(parts.Length / 2);
-                        for (var i = 0; i < parts.Length; i = i + 2)
+                        for (int i = 0; i < parts.Length; i = i + 2)
                         {
                             res.ApplicationIds.Add(parts[i], parts[i + 1]);
                         }
@@ -200,10 +201,10 @@ namespace Photon.Realtime
                 return null;
             }
 
-            var serviceTypes = ((int)appTypes[0]).ToString();
-            for (var i = 1; i < appTypes.Count; i++)
+            string serviceTypes = ((int)appTypes[0]).ToString();
+            for (int i = 1; i < appTypes.Count; i++)
             {
-                var appType = (int)appTypes[i];
+                int appType = (int)appTypes[i];
                 serviceTypes = string.Format("{0},{1}", serviceTypes, appType);
             }
 
@@ -212,7 +213,7 @@ namespace Photon.Realtime
 
         // RFC2822 compliant matching 99.9% of all email addresses in actual use today
         // according to http://www.regular-expressions.info/email.html [22.02.2012]
-        private static Regex reg = new("^((?>[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+\\x20*|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\"\\x20*)*(?<angle><))?((?!\\.)(?>\\.?[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+)+|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\")@(((?!-)[a-zA-Z\\d\\-]+(?<!-)\\.)+[a-zA-Z]{2,}|\\[(((?(?<!\\[)\\.)(25[0-5]|2[0-4]\\d|[01]?\\d?\\d)){4}|[a-zA-Z\\d\\-]*[a-zA-Z\\d]:((?=[\\x01-\\x7f])[^\\\\[\\]]|\\[\\x01-\\x7f])+)\\])(?(angle)>)$",
+        private static Regex reg = new Regex("^((?>[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+\\x20*|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\"\\x20*)*(?<angle><))?((?!\\.)(?>\\.?[a-zA-Z\\d!#$%&'*+\\-/=?^_{|}~]+)+|\"((?=[\\x01-\\x7f])[^\"\\]|\\[\\x01-\\x7f])*\")@(((?!-)[a-zA-Z\\d\\-]+(?<!-)\\.)+[a-zA-Z]{2,}|\\[(((?(?<!\\[)\\.)(25[0-5]|2[0-4]\\d|[01]?\\d?\\d)){4}|[a-zA-Z\\d\\-]*[a-zA-Z\\d]:((?=[\\x01-\\x7f])[^\\\\[\\]]|\\[\\x01-\\x7f])+)\\])(?(angle)>)$",
              RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
         public static bool IsValidEmail(string mailAddress)
         {
@@ -220,7 +221,7 @@ namespace Photon.Realtime
             {
                 return false;
             }
-            Match result = reg.Match(mailAddress);
+            var result = reg.Match(mailAddress);
             return result.Success;
         }
     }

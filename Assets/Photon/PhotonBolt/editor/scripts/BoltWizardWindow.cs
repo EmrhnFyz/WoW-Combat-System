@@ -1,106 +1,112 @@
-using Bolt.Editor.Utils;
-using Bolt.Utils;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Threading;
+using Bolt.Editor.Utils;
+using Bolt.Utils;
 using UnityEditor;
 using UnityEngine;
+using Debug = UnityEngine.Debug;
 using EditorUtility = UnityEditor.EditorUtility;
 
 [InitializeOnLoad]
 public partial class BoltWizardWindow : EditorWindow
 {
-    private BoltSetupStage currentStage = BoltSetupStage.Intro;
-    private static Stopwatch watch = new();
-    private static Boolean? Ready;
-    private static Single? FirstCall;
-    private static volatile bool requestingAppId = false;
-    private static bool RunCompiler;
+    BoltSetupStage currentStage = BoltSetupStage.Intro;
+    static Stopwatch watch = new Stopwatch();
 
-    private static String FirstStartupKey
+    static Boolean? Ready;
+    static Single? FirstCall;
+    private static volatile bool requestingAppId = false;
+
+    static bool RunCompiler;
+
+    static String FirstStartupKey
     {
         get { return "$Bolt$First$Startup$Wizard/" + BoltNetwork.Version; }
     }
 
-    private static Vector2 WindowSize;
-    private static Vector2 WindowPosition;
-    private static string AppIdOrEmail = "";
+    static Vector2 WindowSize;
+    static Vector2 WindowPosition;
 
-    [NonSerialized] private Func<bool> beforeNextCallback;
+    static string AppIdOrEmail = "";
 
-    [NonSerialized] private Dictionary<BoltInstalls, BoltPackage> packageInfo;
+    [NonSerialized] Func<bool> beforeNextCallback;
 
-    [NonSerialized] private int ButtonWidth;
+    [NonSerialized] Dictionary<BoltInstalls, BoltPackage> packageInfo;
 
-    [NonSerialized] private int NavMenuWidth;
+    [NonSerialized] int ButtonWidth;
 
-    [NonSerialized] private string ReleaseHistoryHeader;
-    [NonSerialized] private List<string> ReleaseHistoryTextAdded;
-    [NonSerialized] private List<string> ReleaseHistoryTextChanged;
-    [NonSerialized] private List<string> ReleaseHistoryTextFixed;
-    [NonSerialized] private List<string> ReleaseHistoryTextRemoved;
+    [NonSerialized] int NavMenuWidth;
+
+    [NonSerialized] string ReleaseHistoryHeader;
+    [NonSerialized] List<string> ReleaseHistoryTextAdded;
+    [NonSerialized] List<string> ReleaseHistoryTextChanged;
+    [NonSerialized] List<string> ReleaseHistoryTextFixed;
+    [NonSerialized] List<string> ReleaseHistoryTextRemoved;
 
     // GUI
 
-    [NonSerialized] private Texture2D introIcon;
+    [NonSerialized] Texture2D introIcon;
 
-    [NonSerialized] private Texture2D releaseIcon;
+    [NonSerialized] Texture2D releaseIcon;
 
-    [NonSerialized] private Texture2D photonCloudIcon;
+    [NonSerialized] Texture2D photonCloudIcon;
 
-    [NonSerialized] private Texture2D boltIcon;
+    [NonSerialized] Texture2D boltIcon;
 
-    [NonSerialized] private Texture2D activeIcon;
+    [NonSerialized] Texture2D activeIcon;
 
-    [NonSerialized] private Texture2D inactiveIcon;
+    [NonSerialized] Texture2D inactiveIcon;
 
-    [NonSerialized] private Texture2D bugtrackerIcon;
+    [NonSerialized] Texture2D bugtrackerIcon;
 
-    [NonSerialized] private GUIContent bugtrackerHeader;
+    [NonSerialized] GUIContent bugtrackerHeader;
 
-    [NonSerialized] private GUIContent bugtrackerText;
+    [NonSerialized] GUIContent bugtrackerText;
 
-    [NonSerialized] private Texture2D discordIcon;
+    [NonSerialized] Texture2D discordIcon;
 
-    [NonSerialized] private GUIContent discordHeader;
+    [NonSerialized] GUIContent discordHeader;
 
-    [NonSerialized] private GUIContent discordText;
+    [NonSerialized] GUIContent discordText;
 
-    [NonSerialized] private Texture2D documentationIcon;
+    [NonSerialized] Texture2D documentationIcon;
 
-    [NonSerialized] private GUIContent documentationHeader;
+    [NonSerialized] GUIContent documentationHeader;
 
-    [NonSerialized] private GUIContent documentationText;
+    [NonSerialized] GUIContent documentationText;
 
-    [NonSerialized] private Texture2D reviewIcon;
+    [NonSerialized] Texture2D reviewIcon;
 
-    [NonSerialized] private GUIContent reviewHeader;
+    [NonSerialized] GUIContent reviewHeader;
 
-    [NonSerialized] private GUIContent reviewText;
+    [NonSerialized] GUIContent reviewText;
 
-    [NonSerialized] private Texture2D samplesIcon;
+    [NonSerialized] Texture2D samplesIcon;
 
-    [NonSerialized] private GUIStyle iconSection;
+    [NonSerialized] GUIStyle iconSection;
 
-    [NonSerialized] private GUIStyle stepStyle;
+    [NonSerialized] GUIStyle stepStyle;
 
-    [NonSerialized] private GUIStyle headerStyle;
+    [NonSerialized] GUIStyle headerStyle;
 
-    [NonSerialized] private GUIStyle headerLabel;
+    [NonSerialized] GUIStyle headerLabel;
 
-    [NonSerialized] private GUIStyle headerLargeLabel;
+    [NonSerialized] GUIStyle headerLargeLabel;
 
-    [NonSerialized] private GUIStyle textLabel;
+    [NonSerialized] GUIStyle textLabel;
 
-    [NonSerialized] private GUIStyle centerInputText;
+    [NonSerialized] GUIStyle centerInputText;
 
-    [NonSerialized] private GUIStyle minimalButton;
+    [NonSerialized] GUIStyle minimalButton;
 
-    [NonSerialized] private GUIStyle simpleButton;
+    [NonSerialized] GUIStyle simpleButton;
 
-    [NonSerialized] private GUIStyle introStyle;
+    [NonSerialized] GUIStyle introStyle;
 
-    [NonSerialized] private Vector2 scrollPosition;
+    [NonSerialized] Vector2 scrollPosition;
 
     static BoltWizardWindow()
     {
@@ -110,7 +116,7 @@ public partial class BoltWizardWindow : EditorWindow
         WindowPosition = new Vector2(100, 100);
     }
 
-    private static void ShowWizardWindow()
+    static void ShowWizardWindow()
     {
         if (FirstCall.HasValue == false)
         {
@@ -144,7 +150,7 @@ public partial class BoltWizardWindow : EditorWindow
         watch.Start();
     }
 
-    private static void ReOpen()
+    static void ReOpen()
     {
         if (Ready.HasValue && Ready.Value == false)
         {
@@ -154,7 +160,7 @@ public partial class BoltWizardWindow : EditorWindow
         EditorApplication.update -= ReOpen;
     }
 
-    private void OnEnable()
+    void OnEnable()
     {
         WindowSize = new Vector2(600, 600);
 
@@ -171,7 +177,7 @@ public partial class BoltWizardWindow : EditorWindow
         PrepareReleaseHistoryText();
     }
 
-    private void OnDestroy()
+    void OnDestroy()
     {
         if (!EditorPrefs.GetBool(FirstStartupKey, false))
         {
@@ -185,7 +191,7 @@ public partial class BoltWizardWindow : EditorWindow
         Ready = false;
     }
 
-    private void InitContent()
+    void InitContent()
     {
         if (Ready.HasValue && Ready.Value)
         {
@@ -201,7 +207,7 @@ public partial class BoltWizardWindow : EditorWindow
         activeIcon = Resources.Load<Texture2D>("icons_welcome/bullet_green");
         inactiveIcon = Resources.Load<Texture2D>("icons_welcome/bullet_black");
 
-        var texture = new Texture2D(1, 1);
+        Texture2D texture = new Texture2D(1, 1);
         texture.SetPixel(0, 0, Color.gray);
         texture.Apply();
 
@@ -390,7 +396,7 @@ public partial class BoltWizardWindow : EditorWindow
         RunCompiler = false;
     }
 
-    private void OnGUI()
+    void OnGUI()
     {
         try
         {
@@ -552,7 +558,7 @@ public partial class BoltWizardWindow : EditorWindow
             {
                 GUILayout.BeginVertical();
                 GUILayout.Space(5);
-
+                
                 foreach (var text in items)
                 {
                     GUILayout.Label(string.Format("- {0}.", text), textLabel);
@@ -620,18 +626,18 @@ public partial class BoltWizardWindow : EditorWindow
                 {
                     try
                     {
-                        EditorUtility.DisplayProgressBar(BoltWizardText.CONNECTION_TITLE,
+						EditorUtility.DisplayProgressBar(BoltWizardText.CONNECTION_TITLE,
                             BoltWizardText.CONNECTION_INFO, 0.5f);
                         BoltLog.Info("Starting request");
 
                         requestingAppId = new AccountService().RegisterByEmail(
                             AppIdOrEmail,
-                            new List<ServiceTypes>() { ServiceTypes.Bolt },
+                            new List<ServiceTypes>() {ServiceTypes.Bolt},
                             (response) =>
                             {
                                 if (response.ReturnCode == AccountServiceReturnCodes.Success)
                                 {
-                                    var appKey = response.ApplicationIds[((int)ServiceTypes.Bolt).ToString()];
+                                    var appKey = response.ApplicationIds[((int) ServiceTypes.Bolt).ToString()];
 
                                     settings.photonAppId = appKey;
                                     AppIdOrEmail = appKey;
@@ -647,13 +653,13 @@ public partial class BoltWizardWindow : EditorWindow
                                 }
 
                                 requestingAppId = false;
-                                EditorUtility.ClearProgressBar();
+								EditorUtility.ClearProgressBar();
                             }, (err) =>
                             {
                                 BoltLog.Error(err);
 
                                 requestingAppId = false;
-                                EditorUtility.ClearProgressBar();
+								EditorUtility.ClearProgressBar();
                             });
 
                         if (requestingAppId)
@@ -664,12 +670,12 @@ public partial class BoltWizardWindow : EditorWindow
                         {
                             BoltLog.Warn(
                                 "It was not possible to process your request, please go to the Photon Cloud Dashboard.");
-                            EditorUtility.ClearProgressBar();
+							EditorUtility.ClearProgressBar();
                         }
                     }
                     catch (Exception ex)
                     {
-                        EditorUtility.DisplayDialog("Error", ex.Message, "ok");
+						EditorUtility.DisplayDialog("Error", ex.Message, "ok");
                     }
                 }
                 else if (IsAppId(AppIdOrEmail))
@@ -751,7 +757,7 @@ public partial class BoltWizardWindow : EditorWindow
         GUILayout.Space(5);
     }
 
-    private void DrawHeader()
+    void DrawHeader()
     {
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
@@ -760,12 +766,12 @@ public partial class BoltWizardWindow : EditorWindow
         GUILayout.EndHorizontal();
     }
 
-    private void DrawFooter()
+    void DrawFooter()
     {
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
 
-        EditorGUI.BeginDisabledGroup((int)currentStage == 1);
+        EditorGUI.BeginDisabledGroup((int) currentStage == 1);
 
 #if !BOLT_CLOUD
 		if (currentStage == BoltSetupStage.Photon)
@@ -788,12 +794,19 @@ public partial class BoltWizardWindow : EditorWindow
 
         var nextLabel = "Next";
 
-        nextLabel = currentStage switch
+        switch (currentStage)
         {
-            BoltSetupStage.Photon => AccountService.IsValidEmail(AppIdOrEmail) ? "Register by Email" : nextLabel,
-            BoltSetupStage.Support => "Done",
-            _ => "Next",
-        };
+            case BoltSetupStage.Photon:
+                nextLabel = AccountService.IsValidEmail(AppIdOrEmail) ? "Register by Email" : nextLabel;
+                break;
+            case BoltSetupStage.Support:
+                nextLabel = "Done";
+                break;
+            default:
+                nextLabel = "Next";
+                break;
+        }
+
         if (GUILayout.Button(nextLabel, GUILayout.Width(ButtonWidth)))
         {
             if (beforeNextCallback == null || beforeNextCallback())
@@ -833,7 +846,7 @@ public partial class BoltWizardWindow : EditorWindow
         }
     }
 
-    private void DrawMenuHeader(String text)
+    void DrawMenuHeader(String text)
     {
         GUILayout.BeginHorizontal();
         GUILayout.FlexibleSpace();
@@ -844,7 +857,7 @@ public partial class BoltWizardWindow : EditorWindow
         GUILayout.EndHorizontal();
     }
 
-    private void DrawInputWithLabel(String label, Action gui, bool horizontal = true, bool box = false, int labelSize = 220)
+    void DrawInputWithLabel(String label, Action gui, bool horizontal = true, bool box = false, int labelSize = 220)
     {
         GUILayout.Space(10);
 
@@ -888,7 +901,7 @@ public partial class BoltWizardWindow : EditorWindow
         }
     }
 
-    private void DrawInstallOption(BoltInstalls install)
+    void DrawInstallOption(BoltInstalls install)
     {
         BoltPackage package = packageInfo[install];
 
@@ -903,7 +916,7 @@ public partial class BoltWizardWindow : EditorWindow
             Install(package);
         };
 
-        var packageExists = PackageExists(package.name);
+        bool packageExists = PackageExists(package.name);
 
         Action ignoredAction;
         if (packageExists == true)
@@ -939,7 +952,7 @@ public partial class BoltWizardWindow : EditorWindow
         }
     }
 
-    private void DrawStepOption(Texture2D icon, GUIContent header, GUIContent description = null, bool? active = null,
+    void DrawStepOption(Texture2D icon, GUIContent header, GUIContent description = null, bool? active = null,
         Action callback = null, Action ignoredCallback = null)
     {
         GUILayout.BeginHorizontal(stepStyle);
@@ -977,7 +990,7 @@ public partial class BoltWizardWindow : EditorWindow
 
         if (callback != null)
         {
-            Rect rect = GUILayoutUtility.GetLastRect();
+            var rect = GUILayoutUtility.GetLastRect();
             EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
 
             if (rect.Contains(Event.current.mousePosition))
@@ -998,19 +1011,19 @@ public partial class BoltWizardWindow : EditorWindow
         }
     }
 
-    private void NextStep()
+    void NextStep()
     {
-        currentStage += (int)currentStage < Enum.GetValues(typeof(BoltSetupStage)).Length ? 1 : 0;
+        currentStage += (int) currentStage < Enum.GetValues(typeof(BoltSetupStage)).Length ? 1 : 0;
     }
 
-    private void BackStep()
+    void BackStep()
     {
-        currentStage -= (int)currentStage > 1 ? 1 : 0;
+        currentStage -= (int) currentStage > 1 ? 1 : 0;
     }
 
-    private bool IsInstalled(params BoltInstalls[] installs)
+    bool IsInstalled(params BoltInstalls[] installs)
     {
-        foreach (BoltInstalls pack in installs)
+        foreach (var pack in installs)
         {
             if (!packageInfo[pack].installTest())
             {
@@ -1021,9 +1034,9 @@ public partial class BoltWizardWindow : EditorWindow
         return true;
     }
 
-    private void Install(BoltPackage package)
+    void Install(BoltPackage package)
     {
-        var packageName = package.name;
+        string packageName = package.name;
         PackageFlags flags = package.packageFlags;
 
         if ((flags & PackageFlags.WarnForProjectOverwrite) == PackageFlags.WarnForProjectOverwrite)
