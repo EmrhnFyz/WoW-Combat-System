@@ -1,0 +1,18 @@
+{
+    "name": "Wow.Client.UI",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a284d292de88366448b0c312a762d5b3"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "CLIENT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

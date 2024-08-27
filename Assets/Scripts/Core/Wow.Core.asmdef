@@ -1,0 +1,16 @@
+{
+    "name": "Wow.Core",
+    "rootNamespace": "",
+    "references": [
+        "Wow.Common"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": true,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

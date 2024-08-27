@@ -1,0 +1,19 @@
+{
+    "name": "Wow.Client.Effects",
+    "rootNamespace": "",
+    "references": [
+        "Wow.Common",
+        "Wow.Core"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "CLIENT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

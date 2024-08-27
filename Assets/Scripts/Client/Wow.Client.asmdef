@@ -1,0 +1,23 @@
+{
+    "name": "Wow.Client",
+    "rootNamespace": "",
+    "references": [
+        "Wow.Core",
+        "Wow.Common",
+        "Unity.TextMeshPro",
+        "Wow.Client.Effects",
+        "Wow.Client.UI",
+        "Wow.Client.Localization"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [
+        "CLIENT"
+    ],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
