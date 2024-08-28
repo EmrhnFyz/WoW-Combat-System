@@ -4,7 +4,7 @@ This project is a personal implementation of the World of Warcraft combat system
 The project features an arena mode where players can test out various combat mechanics. Originally created as an older project, it is now being updated with the latest technologies and features.
 
 ## Current Goals
-- [ ] **Upgrade to Photon Fusion 2 SDK:** Transition from the Photon Bolt SDK to the more advanced Photon Fusion 2 SDK.
+- [ ] **Upgrade to Photon Fusion 2 SDK:** Transition from the Photon Bolt SDK to the more advanced Photon Fusion 2 SDK. **(WIP)**
 - [ ] **Implement a Flexible Keybinding System:** Allow players to customize their keybindings for a more personalized experience.
 - [ ] **Add Latest Skills from the War Within Expansion:** Replace existing skills based on the Legion expansion with those from the latest War Within expansion.
 - [ ] **Create Selectable Specializations:** Implement a system that allows players to choose different specializations (specs) for their characters.
