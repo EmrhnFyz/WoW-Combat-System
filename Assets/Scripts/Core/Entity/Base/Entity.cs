@@ -1,19 +1,11 @@
-﻿using Bolt;
-using Common;
-using UdpKit;
+﻿using Common;
+using Fusion;
 using UnityEngine;
 
 namespace Core
 {
-    public abstract class Entity : EntityBehaviour
+    public abstract class Entity : NetworkBehaviour
     {
-        public abstract class CreateToken : IProtocolToken
-        {
-            public abstract void Read(UdpPacket packet);
-
-            public abstract void Write(UdpPacket packet);
-        }
-
         [SerializeField, Header(nameof(Entity))] private BalanceReference balance;
 
         protected BalanceReference Balance => balance;
@@ -22,28 +14,26 @@ namespace Core
         internal World World { get; private set; }
         internal abstract bool AutoScoped { get; }
 
-        public BoltEntity BoltEntity => entity;
-        public bool IsOwner => entity.IsOwner;
-        public bool IsController => entity.HasControl;
-        public ulong Id { get; private set; }
+        public NetworkObject BoltEntity => Object;
+        public bool IsOwner => Object.HasStateAuthority;
+        public bool IsController => Object.HasInputAuthority;
 
         private void Awake() => EventHandler.SubscribeEvent<bool, World>(gameObject, GameEvents.EntityPooled, OnEntityPooled);
 
         private void OnDestroy() => EventHandler.UnsubscribeEvent<bool, World>(gameObject, GameEvents.EntityPooled, OnEntityPooled);
 
-        public override void Attached()
+        public override void Spawned()
         {
-            base.Attached();
+            base.Spawned();
 
-            Id = entity.NetworkId.PackedValue;
             IsValid = true;
         }
 
-        public override void Detached()
+        public override void Despawned(NetworkRunner runner, bool hasState)
         {
             IsValid = false;
 
-            base.Detached();
+            base.Despawned(runner, hasState);
         }
 
         internal virtual void DoUpdate(int deltaTime)
